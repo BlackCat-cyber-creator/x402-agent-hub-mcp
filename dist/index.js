@@ -64,7 +64,7 @@ async function callHub(path, init) {
 }
 const server = new McpServer({
     name: "x402-agent-hub",
-    version: "1.4.0",
+    version: "1.5.0",
 });
 server.tool("get_hub_catalog", "FREE ($0.00): Inspect the live x402 Agent Hub service catalog, supported CFD/Forex tickers, per-call USDC pricing, and wallet payment readiness.", {}, async () => {
     const res = await fetch(`${HUB_URL}/`, {
@@ -232,8 +232,8 @@ server.tool("generate_outreach_dossier", "Generate a complete B2B SDR Outreach D
         },
     ],
 }));
-// Data APIs: cheap single reads across 7 EVM chains and US public-company data from SEC
-// EDGAR. Failed reads (bad input, not found, upstream outage) return an error status and
+// Data APIs: cheap single reads across 7 EVM chains, US public-company data from SEC
+// EDGAR and worldwide company/person enrichment from Wikidata. Failed reads (bad input, not found, upstream outage) return an error status and
 // are never charged.
 const CHAIN = z
     .string()
@@ -338,6 +338,35 @@ const DATA_TOOLS = [
             ticker: TICKER,
             cik: CIK,
             limit: z.string().optional().describe("Recent Form 4 filings to parse, 1-20 (default 10)"),
+        },
+    },
+    {
+        name: "entity_search",
+        path: "/v1/entity/search",
+        description: "Find companies or notable people by name with Wikidata IDs, descriptions and Wikipedia links, to pick the right entity before enriching ($0.002 USDC on Base).",
+        shape: {
+            q: z.string().describe("Name to search, e.g. grab"),
+            type: z.string().optional().describe("company, person or any (default any)"),
+            limit: z.string().optional().describe("Max results, 1-20 (default 5)"),
+        },
+    },
+    {
+        name: "entity_company",
+        path: "/v1/entity/company",
+        description: "Enrich any company worldwide (private, startup or listed) by name, website domain or Wikidata ID: website, founded, HQ, industries, CEO, founders, employees, revenue, stock listings, LEI/ISIN, parent/subsidiaries, official X/LinkedIn/GitHub/Instagram, logo and Wikipedia summary ($0.003 USDC on Base).",
+        shape: {
+            name: z.string().optional().describe("Company name, e.g. Stripe"),
+            domain: z.string().optional().describe("Company website or domain, e.g. stripe.com"),
+            id: z.string().optional().describe("Wikidata item ID, e.g. Q7624104"),
+        },
+    },
+    {
+        name: "entity_person",
+        path: "/v1/entity/person",
+        description: "Professional profile of a notable person (founder, executive, public figure): occupations, current employers and positions, education, birth year and public X/LinkedIn/GitHub accounts. No family or residence data ($0.003 USDC on Base).",
+        shape: {
+            name: z.string().optional().describe("Person's name, e.g. Jensen Huang"),
+            id: z.string().optional().describe("Wikidata item ID, e.g. Q305177"),
         },
     },
 ];

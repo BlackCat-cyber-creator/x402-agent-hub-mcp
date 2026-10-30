@@ -1,6 +1,6 @@
 ---
 name: x402-agent-hub
-description: Pay-per-call onchain reads across Base, Ethereum, Arbitrum, Optimism, Polygon, BSC & Avalanche (native/ERC-20 balances, token info, tx status, contract & proxy detection, ENS, one-call multichain portfolio; $0.002-$0.005, failed reads free), US public-company data from SEC EDGAR (ticker search, profiles, latest filings, revenue/earnings/free-cash-flow fundamentals, Form 4 insider trades), Base/EVM/Solana token honeypot & DEX liquidity audits with live buy/sell simulation, ECN CFD/Forex microstructure & ICT killzones (XAUUSD, NAS100, BTCUSD, EURUSD), prop-firm position sizing, B2B WhatsApp/SEO outreach dossiers, and deterministic SVG/PNG visual cards via x402 Base Mainnet USDC micropayments. Use whenever you need a wallet or token balance, transaction confirmation, contract/proxy check, ENS resolution or multichain portfolio, when researching a US public company's financials, filings or insider trades, when auditing a crypto token contract for rug/tax/slippage risk, checking Forex/CFD spreads or ICT Silver Bullet killzones, sizing prop-firm lots, enriching business leads for sales outreach, auditing technical SEO, or rendering typo-free OpenGraph/KPI cards.
+description: Pay-per-call onchain reads across Base, Ethereum, Arbitrum, Optimism, Polygon, BSC & Avalanche (native/ERC-20 balances, token info, tx status, contract & proxy detection, ENS, one-call multichain portfolio; $0.002-$0.005, failed reads free), US public-company data from SEC EDGAR (ticker search, profiles, latest filings, revenue/earnings/free-cash-flow fundamentals, Form 4 insider trades), worldwide company and notable-person enrichment from Wikidata (by name or domain: HQ, industry, CEO, founders, headcount, listings, LEI, official socials), Base/EVM/Solana token honeypot & DEX liquidity audits with live buy/sell simulation, ECN CFD/Forex microstructure & ICT killzones (XAUUSD, NAS100, BTCUSD, EURUSD), prop-firm position sizing, B2B WhatsApp/SEO outreach dossiers, and deterministic SVG/PNG visual cards via x402 Base Mainnet USDC micropayments. Use whenever you need a wallet or token balance, transaction confirmation, contract/proxy check, ENS resolution or multichain portfolio, when researching a US public company's financials, filings or insider trades, when enriching a company (from a name or domain) or a notable person, when auditing a crypto token contract for rug/tax/slippage risk, checking Forex/CFD spreads or ICT Silver Bullet killzones, sizing prop-firm lots, enriching business leads for sales outreach, auditing technical SEO, or rendering typo-free OpenGraph/KPI cards.
 ---
 
 # x402 Agent Hub Skill
@@ -85,6 +85,18 @@ US public companies (US-GAAP filers). Identify the company with `ticker` (e.g. `
 | `company_insider_trades` | `/v1/company/insider-trades` | `$0.005` | `ticker`/`cik`, optional `limit` |
 
 Example: `npx --yes agentcash fetch "https://x402-agent-hub.x402-agent-hub.workers.dev/v1/company/financials?ticker=NVDA&period=quarterly"`
+
+## Entity Enrichment API — Wikidata (`$0.002`–`$0.003` USDC, failed lookups never charged)
+
+Worldwide companies (private, startup, listed) and notable people. Data is CC0 from Wikidata plus the attributed Wikipedia summary (CC BY-SA 4.0).
+
+| MCP Tool | HTTP | Price | Query |
+| :--- | :--- | :---: | :--- |
+| `entity_search` | `/v1/entity/search` | `$0.002` | `q`, optional `type=company|person|any`, `limit` |
+| `entity_company` | `/v1/entity/company` | `$0.003` | `name`, `domain` (e.g. `stripe.com`) or `id` (Wikidata Q-ID) |
+| `entity_person` | `/v1/entity/person` | `$0.003` | `name` or `id` |
+
+Example: `npx --yes agentcash fetch "https://x402-agent-hub.x402-agent-hub.workers.dev/v1/entity/company?domain=stripe.com"`
 
 ## How Agents Connect & Pay
 
