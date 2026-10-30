@@ -1,0 +1,23 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      x402BuyerPrivateKey:
+        type: string
+        description: "Optional scoped EVM wallet private key (0x...) funded with $1-$5 USDC on Base Mainnet (eip155:8453) to auto-pay $0.005-$0.025 per tool call. Omit to browse free catalog & inspect x402 payment quotes."
+      x402HubUrl:
+        type: string
+        default: "https://x402-agent-hub.x402-agent-hub.workers.dev"
+        description: "x402 Agent Hub gateway base URL."
+  commandFunction: |-
+    (config) => ({
+      command: 'node',
+      args: ['dist/index.js'],
+      env: {
+        ...(config.x402BuyerPrivateKey ? { X402_BUYER_PRIVATE_KEY: config.x402BuyerPrivateKey } : {}),
+        ...(config.x402HubUrl ? { X402_HUB_URL: config.x402HubUrl } : {})
+      }
+    })
+
