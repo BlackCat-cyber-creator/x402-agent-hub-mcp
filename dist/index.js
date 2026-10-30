@@ -64,7 +64,7 @@ async function callHub(path, init) {
 }
 const server = new McpServer({
     name: "x402-agent-hub",
-    version: "1.3.0",
+    version: "1.4.0",
 });
 server.tool("get_hub_catalog", "FREE ($0.00): Inspect the live x402 Agent Hub service catalog, supported CFD/Forex tickers, per-call USDC pricing, and wallet payment readiness.", {}, async () => {
     const res = await fetch(`${HUB_URL}/`, {
@@ -232,15 +232,18 @@ server.tool("generate_outreach_dossier", "Generate a complete B2B SDR Outreach D
         },
     ],
 }));
-// Onchain Read API: cheap single reads across 7 EVM chains. Failed reads (bad input,
-// not found, RPC outage) return an error status and are never charged.
+// Data APIs: cheap single reads across 7 EVM chains and US public-company data from SEC
+// EDGAR. Failed reads (bad input, not found, upstream outage) return an error status and
+// are never charged.
 const CHAIN = z
     .string()
     .optional()
     .describe("base (default), ethereum, arbitrum, optimism, polygon, bsc or avalanche");
 const ADDRESS = z.string().describe("0x-prefixed wallet or contract address");
 const TOKEN = z.string().describe("0x-prefixed ERC-20 token contract address");
-const CHAIN_READ_TOOLS = [
+const TICKER = z.string().optional().describe("US stock ticker, e.g. AAPL or BRK.B (or pass cik)");
+const CIK = z.string().optional().describe("SEC Central Index Key, e.g. 320193 (alternative to ticker)");
+const DATA_TOOLS = [
     {
         name: "chain_native_balance",
         path: "/v1/chain/balance",
@@ -289,8 +292,56 @@ const CHAIN_READ_TOOLS = [
             chains: z.string().optional().describe("Optional comma-separated subset, e.g. base,arbitrum"),
         },
     },
+    {
+        name: "company_search",
+        path: "/v1/company/search",
+        description: "Find a US public company's ticker, legal name, exchange and SEC CIK by name or ticker ($0.002 USDC on Base).",
+        shape: {
+            q: z.string().describe("Ticker or company name fragment, e.g. nvidia"),
+            limit: z.string().optional().describe("Max results, 1-25 (default 10)"),
+        },
+    },
+    {
+        name: "company_profile",
+        path: "/v1/company/profile",
+        description: "SEC company profile: industry, exchanges, fiscal year end, address, former names and links to the latest 10-K/10-Q/8-K ($0.002 USDC on Base).",
+        shape: { ticker: TICKER, cik: CIK },
+    },
+    {
+        name: "company_financials",
+        path: "/v1/company/financials",
+        description: "Annual or quarterly fundamentals from SEC XBRL (US-GAAP filers): revenue, operating/net income, diluted EPS, operating cash flow, capex, free cash flow, assets, liabilities, equity, cash, margins and YoY growth ($0.005 USDC on Base).",
+        shape: {
+            ticker: TICKER,
+            cik: CIK,
+            period: z.string().optional().describe("annual (default) or quarterly"),
+            limit: z.string().optional().describe("Number of periods, 1-12 (default 4)"),
+        },
+    },
+    {
+        name: "company_filings",
+        path: "/v1/company/filings",
+        description: "Latest SEC filings (10-K, 10-Q, 8-K, S-1...) with 8-K item numbers and direct document links, filterable by form and date ($0.002 USDC on Base).",
+        shape: {
+            ticker: TICKER,
+            cik: CIK,
+            form: z.string().optional().describe("Comma-separated form types, e.g. 10-K,8-K"),
+            since: z.string().optional().describe("Only filings on/after YYYY-MM-DD"),
+            limit: z.string().optional().describe("Max filings, 1-50 (default 10)"),
+        },
+    },
+    {
+        name: "company_insider_trades",
+        path: "/v1/company/insider-trades",
+        description: "Parsed SEC Form 4 insider trades: insider name and role, buy/sell/award code, shares, price, USD value, holdings after, 10b5-1 flag, plus a buy/sell summary ($0.005 USDC on Base).",
+        shape: {
+            ticker: TICKER,
+            cik: CIK,
+            limit: z.string().optional().describe("Recent Form 4 filings to parse, 1-20 (default 10)"),
+        },
+    },
 ];
-for (const tool of CHAIN_READ_TOOLS) {
+for (const tool of DATA_TOOLS) {
     server.tool(tool.name, tool.description, tool.shape, async (args) => {
         const query = new URLSearchParams();
         for (const [key, value] of Object.entries(args)) {
