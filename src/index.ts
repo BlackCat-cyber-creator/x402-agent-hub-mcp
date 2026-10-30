@@ -72,7 +72,7 @@ async function callHub(path: string, init?: RequestInit): Promise<string> {
 
 const server = new McpServer({
   name: "x402-agent-hub",
-  version: "1.0.0",
+  version: "1.1.0",
 });
 
 server.tool(
@@ -246,6 +246,59 @@ server.tool(
         text: await callHub("/v1/render/card", {
           method: "POST",
           body: JSON.stringify({ ...input, format: "json" }),
+        }),
+      },
+    ],
+  }),
+);
+
+server.tool(
+  "audit_crypto_token",
+  "Audit any Base, Ethereum, Arbitrum, Optimism, Polygon, BSC, Avalanche, or Solana token contract for honeypots, buy/sell transfer taxes, hidden ownership, whale concentration, LP locks, live DEX liquidity depth, and AMM slippage impact for an intended USD trade size ($0.05 USDC on Base).",
+  {
+    tokenAddress: z
+      .string()
+      .describe("0x-prefixed EVM token contract address or Base58 Solana mint address"),
+    chain: z
+      .enum(["base", "ethereum", "arbitrum", "optimism", "polygon", "bsc", "avalanche", "solana"])
+      .optional()
+      .describe("Target chain (defaults to 'base' for 0x addresses or 'solana' for Base58)"),
+    intendedOrderUsd: z
+      .number()
+      .optional()
+      .describe("Intended swap size in USD to estimate AMM pool price impact (default 1000)"),
+  },
+  async (input) => ({
+    content: [
+      {
+        type: "text",
+        text: await callHub("/v1/crypto/token-audit", {
+          method: "POST",
+          body: JSON.stringify(input),
+        }),
+      },
+    ],
+  }),
+);
+
+server.tool(
+  "generate_outreach_dossier",
+  "Generate a complete B2B SDR Outreach Dossier in 1 call: Brand Sanitizer, Phantom Lead Shield, E.164 WhatsApp/email contacts, CMS/pixel stack, 0-100 Technical SEO revenue-leak audit, and ready-to-send personalized WhatsApp & Cold Email scripts ($0.05 USDC on Base).",
+  {
+    url: z.string().describe("Target business website, social bio, or marketplace URL"),
+    businessName: z.string().optional().describe("Optional raw business title to sanitize"),
+    agencyOffer: z
+      .string()
+      .optional()
+      .describe("Optional description of your product/agency offer to weave into the scripts"),
+  },
+  async (input) => ({
+    content: [
+      {
+        type: "text",
+        text: await callHub("/v1/web/outreach-dossier", {
+          method: "POST",
+          body: JSON.stringify(input),
         }),
       },
     ],

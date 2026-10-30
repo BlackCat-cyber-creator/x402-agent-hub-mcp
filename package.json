@@ -1,8 +1,8 @@
 {
   "name": "x402-agent-hub-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
-  "description": "Model Context Protocol (MCP) server for x402 Agent Hub: CFD/Forex ECN microstructure & ICT killzones, prop-firm risk sizing, clean LLM web markdown extraction, WhatsApp/business lead enrichment, technical SEO audits, and deterministic SVG/PNG visual cards via x402 Base USDC micropayments.",
+  "description": "Model Context Protocol (MCP) server & Agent Skill for x402 Agent Hub: Base/EVM/Solana token honeypot & DEX liquidity audits, CFD/Forex ECN microstructure & ICT killzones, prop-firm risk sizing, B2B WhatsApp/SEO outreach dossiers, and deterministic SVG/PNG visual cards via x402 Base USDC micropayments.",
   "keywords": [
     "mcp",
     "model-context-protocol",
