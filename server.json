@@ -1,0 +1,26 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.BlackCat-cyber-creator/x402-agent-hub",
+  "title": "x402 Agent Hub",
+  "description": "CFD/FX ECN spreads, ICT killzones, prop risk, lead enrichment, SEO & SVG cards via x402 Base USDC.",
+  "version": "1.0.0",
+  "websiteUrl": "https://tryponcho.com/m/x402-agent-hub.x402-agent-hub.workers.dev",
+  "repository": {
+    "source": "github",
+    "url": "https://github.com/BlackCat-cyber-creator/x402-agent-hub-mcp"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://x402-agent-hub.x402-agent-hub.workers.dev/mcp",
+      "headers": [
+        {
+          "name": "X-Buyer-Private-Key",
+          "description": "Optional scoped Base Mainnet USDC wallet key (0x...) to auto-pay $0.005-$0.025 per x402 call",
+          "isRequired": false,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
