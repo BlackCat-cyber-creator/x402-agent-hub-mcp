@@ -18,7 +18,7 @@ Pay-per-call (`$0.005`–`$0.050` USDC on **Base Mainnet**, `eip155:8453`) intel
    - **HTTP:** `POST /v1/crypto/token-audit`
    - **MCP Tool:** `audit_crypto_token`
    - **Body:** `{ "tokenAddress": "0x940181a94A35A4569E4529A3CDfB74e38FD98631", "chain": "base", "intendedOrderUsd": 2500 }`
-   - Supports `base`, `ethereum`, `arbitrum`, `optimism`, `polygon`, `bsc`, `avalanche`, and `solana`. Returns `0-100` `safetyScore`, `verdict`, `riskFlags`, GoPlus bytecode flags, and DexScreener pool depth + AMM price-impact sizing.
+   - Supports `base`, `ethereum`, `arbitrum`, `optimism`, `polygon`, `bsc`, `avalanche`, and `solana`. Returns `0-100` `safetyScore`, `verdict`, `riskFlags`, GoPlus bytecode flags, DexScreener pool depth + AMM price-impact sizing, and `swapSimulation`: a live buy → sell round trip from a fresh wallet (Base, Ethereum, BSC, Arbitrum, Optimism, Polygon) with measured `buyTaxPercent` / `sellTaxPercent`. A `SELL_BLOCKED` status forces `DO_NOT_TRADE_CRITICAL_RISK`.
 
 2. **All-in-One B2B SDR Outreach Dossier (`$0.050` USDC)**
    - **HTTP:** `POST /v1/web/outreach-dossier`
@@ -58,10 +58,11 @@ Pay-per-call (`$0.005`–`$0.050` USDC on **Base Mainnet**, `eip155:8453`) intel
 
 ## How Agents Connect & Pay
 
-- **Option A — Remote Streamable HTTP MCP:** Connect your MCP client to `https://x402-agent-hub.x402-agent-hub.workers.dev/mcp` (pass optional header `X-Buyer-Private-Key: 0xYOUR_SCOPED_BASE_USDC_KEY` for automatic micropayment settlement).
-- **Option B — Local Stdio MCP:** `npx -y github:BlackCat-cyber-creator/x402-agent-hub-mcp` with `X402_BUYER_PRIVATE_KEY=0x...`.
+- **Option A — Remote Streamable HTTP MCP:** Connect your MCP client to `https://x402-agent-hub.x402-agent-hub.workers.dev/mcp` (no wallet key is sent; paid tools accept a client-signed `paymentSignature` argument).
+- **Option B — Local Stdio MCP:** `npx -y github:BlackCat-cyber-creator/x402-agent-hub-mcp` with `X402_BUYER_PRIVATE_KEY=0x...` (payments are signed locally; the key never leaves your machine).
 - **Option C — Direct x402 HTTP (`@x402/fetch` or AgentCash CLI):**
   ```bash
   npx --yes agentcash fetch https://x402-agent-hub.x402-agent-hub.workers.dev/v1/crypto/token-audit \
     -m POST -b '{"tokenAddress":"0x940181a94A35A4569E4529A3CDfB74e38FD98631","chain":"base"}'
   ```
+

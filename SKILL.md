@@ -4,3 +4,4 @@ description: Institutional onchain Base/EVM/Solana token honeypot & DEX liquidit
 ---
 
 See [skills/x402-agent-hub/SKILL.md](./skills/x402-agent-hub/SKILL.md) for full x402 v2 endpoint schemas, Remote Streamable HTTP MCP configuration (`https://x402-agent-hub.x402-agent-hub.workers.dev/mcp`), and `@x402/fetch` / AgentCash usage examples.
+

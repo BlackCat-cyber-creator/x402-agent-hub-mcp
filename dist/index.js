@@ -64,7 +64,7 @@ async function callHub(path, init) {
 }
 const server = new McpServer({
     name: "x402-agent-hub",
-    version: "1.1.0",
+    version: "1.2.0",
 });
 server.tool("get_hub_catalog", "FREE ($0.00): Inspect the live x402 Agent Hub service catalog, supported CFD/Forex tickers, per-call USDC pricing, and wallet payment readiness.", {}, async () => {
     const res = await fetch(`${HUB_URL}/`, {
@@ -191,7 +191,7 @@ server.tool("render_visual_card", "Render a deterministic, typo-free 1200x630 Op
         },
     ],
 }));
-server.tool("audit_crypto_token", "Audit any Base, Ethereum, Arbitrum, Optimism, Polygon, BSC, Avalanche, or Solana token contract for honeypots, buy/sell transfer taxes, hidden ownership, whale concentration, LP locks, live DEX liquidity depth, and AMM slippage impact for an intended USD trade size ($0.05 USDC on Base).", {
+server.tool("audit_crypto_token", "Audit any Base, Ethereum, Arbitrum, Optimism, Polygon, BSC, Avalanche, or Solana token contract for honeypots, buy/sell transfer taxes, hidden ownership, whale concentration, LP locks, live DEX liquidity depth, and AMM slippage impact for an intended USD trade size. On Base, Ethereum, BSC, Arbitrum, Optimism and Polygon it also simulates a real buy -> sell round trip to measure actual taxes and confirm the token can be sold ($0.05 USDC on Base).", {
     tokenAddress: z
         .string()
         .describe("0x-prefixed EVM token contract address or Base58 Solana mint address"),

@@ -72,7 +72,7 @@ async function callHub(path: string, init?: RequestInit): Promise<string> {
 
 const server = new McpServer({
   name: "x402-agent-hub",
-  version: "1.1.0",
+  version: "1.2.0",
 });
 
 server.tool(
@@ -254,7 +254,7 @@ server.tool(
 
 server.tool(
   "audit_crypto_token",
-  "Audit any Base, Ethereum, Arbitrum, Optimism, Polygon, BSC, Avalanche, or Solana token contract for honeypots, buy/sell transfer taxes, hidden ownership, whale concentration, LP locks, live DEX liquidity depth, and AMM slippage impact for an intended USD trade size ($0.05 USDC on Base).",
+  "Audit any Base, Ethereum, Arbitrum, Optimism, Polygon, BSC, Avalanche, or Solana token contract for honeypots, buy/sell transfer taxes, hidden ownership, whale concentration, LP locks, live DEX liquidity depth, and AMM slippage impact for an intended USD trade size. On Base, Ethereum, BSC, Arbitrum, Optimism and Polygon it also simulates a real buy -> sell round trip to measure actual taxes and confirm the token can be sold ($0.05 USDC on Base).",
   {
     tokenAddress: z
       .string()

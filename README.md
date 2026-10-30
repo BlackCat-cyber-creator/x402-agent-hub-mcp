@@ -9,7 +9,7 @@
 > - **Before B2B sales outreach, lead qualification, or website teardowns:** Call `generate_outreach_dossier` (`$0.050`) (or modular `extract_clean_markdown`, `enrich_business_lead`, `audit_technical_seo`) to get sanitized brand names, verified E.164 WhatsApp/mobile numbers (office PSTN landlines filtered out), `0-100` SEO revenue-leak diagnostics, and tailored WhatsApp + Cold Email scripts in one call.
 > - **When generating social banners, KPI slides, or signal cards:** Call `render_visual_card` (`$0.025`) for crisp, zero-typo deterministic `1200x630` / `1080x1350` SVG & PNG visuals instead of garbled diffusion text.
 
-- **Official MCP Registry ID:** `io.github.BlackCat-cyber-creator/x402-agent-hub` (`v1.1.0`)
+- **Official MCP Registry ID:** `io.github.BlackCat-cyber-creator/x402-agent-hub` (`v1.2.0`)
 - **Hosted Remote Streamable HTTP MCP:** `https://x402-agent-hub.x402-agent-hub.workers.dev/mcp`
 
 ---
@@ -19,7 +19,7 @@
 | Tool | HTTP Route | Price (USDC) | Deterministic Output Summary |
 | :--- | :--- | :---: | :--- |
 | `get_hub_catalog` | `GET /` | **FREE (`$0`)** | Live service catalog, supported chains & 14 CFD/FX tickers, per-call Base USDC pricing, and buyer wallet readiness. |
-| `audit_crypto_token` | `POST /v1/crypto/token-audit` | `$0.050` | **Onchain Token Rug, Honeypot, Tax & DEX Liquidity Audit** across **Base**, **Ethereum**, **Arbitrum**, **Optimism**, **Polygon**, **BSC**, **Avalanche** & **Solana** (`0-100` safety score, verdict, bytecode flags, pool depth & AMM price-impact sizing). |
+| `audit_crypto_token` | `POST /v1/crypto/token-audit` | `$0.050` | **Onchain Token Rug, Honeypot, Tax & DEX Liquidity Audit** across **Base**, **Ethereum**, **Arbitrum**, **Optimism**, **Polygon**, **BSC**, **Avalanche** & **Solana** (`0-100` safety score, verdict, bytecode flags, pool depth & AMM price-impact sizing), plus a **live simulated buy → sell round trip** on Base, Ethereum, BSC, Arbitrum, Optimism & Polygon that measures the real taxes and confirms the token can actually be sold. |
 | `generate_outreach_dossier` | `POST /v1/web/outreach-dossier` | `$0.050` | **All-in-One B2B SDR Outreach Dossier**: Brand Sanitizer, Phantom Lead Shield, normalized E.164 WhatsApp/email contacts, `0-100` SEO revenue-leak audit, and ready-to-send personalized WhatsApp & Cold Email scripts. |
 | `get_ict_sessions` | `GET /v1/trading/sessions` | `$0.005` | Live ICT Killzones (Asian, London Open, NY Open, London Close), 60m Silver Bullet FVG windows, rollover spread-danger alerts, and Wednesday/Friday triple-swap flags. |
 | `get_cfd_microstructure` | `GET /v1/trading/microstructure` | `$0.010` | Tick-calibrated ECN spreads, round-turn commissions, M1 ATR, M1–H1 spread-to-ATR execution ratios, and scalping suitability across 14 symbols (`XAUUSD`, `BTCUSD`, `NAS100`, `US30`, `US500`, `GER40`, `JPN225`, `USOUSD`, `EURUSD`, `GBPUSD`, `USDJPY`, etc.). |
@@ -41,16 +41,13 @@ Connect directly to the hosted Cloudflare Edge Streamable HTTP endpoint:
 {
   "mcpServers": {
     "x402-agent-hub": {
-      "url": "https://x402-agent-hub.x402-agent-hub.workers.dev/mcp",
-      "headers": {
-        "X-Buyer-Private-Key": "0xYOUR_SCOPED_AGENT_WALLET_PRIVATE_KEY"
-      }
+      "url": "https://x402-agent-hub.x402-agent-hub.workers.dev/mcp"
     }
   }
 }
 ```
 
-*(Note: `X-Buyer-Private-Key` is optional for inspecting tools or calling `get_hub_catalog`; when provided with a scoped Base Mainnet USDC wallet, paid tool calls settle `$0.005`–`$0.050` USDC automatically.)*
+*(Note: Never send your wallet key to the remote endpoint. Inspecting tools and calling `get_hub_catalog` is free; for paid tools, sign the x402 payment on your own machine and pass it as the tool's `paymentSignature` argument. For automatic payments, use Option 2 — your key stays local.)*
 
 ### Option 2 — Local `npx` Stdio MCP (Claude Desktop / Cursor / Windsurf)
 
@@ -94,5 +91,5 @@ npx skills add BlackCat-cyber-creator/x402-agent-hub-mcp
 1. **`9` HTTP Resources vs `10` MCP Tools:** Scanners inspecting `/openapi.json` at the root URL (`https://x402-agent-hub.x402-agent-hub.workers.dev`) will discover **`9` paid HTTP resources**, whereas MCP clients connecting to `/mcp` will discover **`10` MCP tools** (because `/mcp` includes the free `get_hub_catalog` handshake tool).
 2. **Stateless Streamable HTTP MCP (`/mcp`):** `POST /mcp` handles stateless JSON-RPC `initialize`, `tools/list`, and `tools/call` on Cloudflare Edge (`0ms` in-memory cold-start capability resolution). `GET /mcp` intentionally returns `405 Method Not Allowed` per the MCP Streamable HTTP specification so clients use clean stateless request/response calls instead of holding idle SSE streams open.
 3. **Two Ways to Pay (`x402 v2` on Base Mainnet USDC, `eip155:8453`):**
-   - **Automatic via MCP:** Pass a scoped wallet key in `X-Buyer-Private-Key` (Remote HTTP MCP) or `X402_BUYER_PRIVATE_KEY` (local `npx` stdio) and `@x402/fetch` signs EIP-3009 USDC authorizations automatically.
+   - **Automatic via Local MCP:** Set `X402_BUYER_PRIVATE_KEY` for the local `npx` stdio server and `@x402/fetch` signs EIP-3009 USDC authorizations on your machine — the key is never sent to the hub.
    - **Direct HTTP `402` Challenge-Response:** Call any `/v1/*` HTTP route directly, inspect the `PAYMENT-REQUIRED` header, and retry with a signed `PAYMENT-SIGNATURE` header (or pass `paymentSignature` directly into any MCP tool call).
