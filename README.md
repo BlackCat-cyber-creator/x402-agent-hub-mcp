@@ -17,7 +17,16 @@ Model Context Protocol (**MCP**) server connecting **Claude Desktop**, **Claude 
 
 ---
 
-## Quick Setup (Claude Desktop / Cursor / Windsurf)
+## Quick Setup
+
+### Option 1 — Zero-Install Remote Streamable HTTP MCP (Smithery / Cursor / Claude / Windsurf)
+
+Connect directly to the hosted Cloudflare Edge Streamable HTTP endpoint:
+
+- **Remote MCP Server URL:** `https://x402-agent-hub.x402-agent-hub.workers.dev/mcp`
+- **Auto-Pay Header (Optional):** Pass `x-buyer-private-key: 0xYOUR_SCOPED_AGENT_WALLET_PRIVATE_KEY` (or `?x402BuyerPrivateKey=0x...`) to automatically settle `$0.005`–`$0.025` Base Mainnet USDC micropayments per call.
+
+### Option 2 — Local `npx` Stdio MCP (Claude Desktop / Cursor / Windsurf)
 
 Add to your `claude_desktop_config.json` or `.cursor/mcp.json`:
 
