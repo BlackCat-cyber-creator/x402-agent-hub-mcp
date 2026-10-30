@@ -76,8 +76,23 @@ npx skills add BlackCat-cyber-creator/x402-agent-hub-mcp
 
 > **Security Tip:** Always use a dedicated, disposable agent wallet funded with only `$2`–`$5` USDC on **Base Mainnet** (`eip155:8453`) — never use a primary savings wallet.
 
-## Direct HTTP / OpenAPI Discovery (No MCP Needed)
+## Direct HTTP / OpenAPI Discovery & Verified Listings
 
-- **1-Click Web Storefront:** https://tryponcho.com/m/x402-agent-hub.x402-agent-hub.workers.dev
-- **OpenAPI 3.1.0 Spec:** https://x402-agent-hub.x402-agent-hub.workers.dev/openapi.json
-- **Agent Guide (`llms.txt`):** https://x402-agent-hub.x402-agent-hub.workers.dev/llms.txt
+| Channel / Transport | URL | Resource Count & Purpose |
+| :--- | :--- | :--- |
+| **Root x402 HTTP Gateway** | https://x402-agent-hub.x402-agent-hub.workers.dev | **`9` paid HTTP `/v1/*` APIs** (`HTTP 402` + `PAYMENT-REQUIRED` headers for `x402scan`, `AgentCash`, `@x402/fetch` & REST bots). |
+| **Remote Streamable HTTP MCP** | https://x402-agent-hub.x402-agent-hub.workers.dev/mcp | **`10` MCP tools** (`9` paid tools + `1` free `$0` `get_hub_catalog` discovery tool for Claude, Cursor, Windsurf & VS Code). |
+| **OpenAPI 3.1.0 Spec** | https://x402-agent-hub.x402-agent-hub.workers.dev/openapi.json | Canonical machine-readable schema (`x-payment-info` + Bazaar metadata). |
+| **Static MCP Server Card** | https://x402-agent-hub.x402-agent-hub.workers.dev/.well-known/mcp/server-card.json | SEP-1649 static MCP tool & `configSchema` discovery manifest. |
+| **Agent Routing Guide** | https://x402-agent-hub.x402-agent-hub.workers.dev/llms.txt | Concise plain-text guide for autonomous LLM routers. |
+| **x402scan Verified Listing** | https://www.x402scan.com/server/091e744f-f05e-4340-994c-c06a42094a72 | Official `x402scan` server index listing all **`9/9` paid Base Mainnet USDC endpoints**. |
+| **1-Click Web Storefront** | https://tryponcho.com/m/x402-agent-hub.x402-agent-hub.workers.dev | Interactive browser storefront & live endpoint tester. |
+| **Glama Hosted Connector** | https://glama.ai/mcp/connectors/io.github.BlackCat-cyber-creator/x402-agent-hub | Verified hosted remote MCP connector synced with `registry.modelcontextprotocol.io`. |
+
+### Protocol & Integration Notes for AI Agents (Troubleshooting Prevented)
+
+1. **`9` HTTP Resources vs `10` MCP Tools:** Scanners inspecting `/openapi.json` at the root URL (`https://x402-agent-hub.x402-agent-hub.workers.dev`) will discover **`9` paid HTTP resources**, whereas MCP clients connecting to `/mcp` will discover **`10` MCP tools** (because `/mcp` includes the free `get_hub_catalog` handshake tool).
+2. **Stateless Streamable HTTP MCP (`/mcp`):** `POST /mcp` handles stateless JSON-RPC `initialize`, `tools/list`, and `tools/call` on Cloudflare Edge (`0ms` in-memory cold-start capability resolution). `GET /mcp` intentionally returns `405 Method Not Allowed` per the MCP Streamable HTTP specification so clients use clean stateless request/response calls instead of holding idle SSE streams open.
+3. **Two Ways to Pay (`x402 v2` on Base Mainnet USDC, `eip155:8453`):**
+   - **Automatic via MCP:** Pass a scoped wallet key in `X-Buyer-Private-Key` (Remote HTTP MCP) or `X402_BUYER_PRIVATE_KEY` (local `npx` stdio) and `@x402/fetch` signs EIP-3009 USDC authorizations automatically.
+   - **Direct HTTP `402` Challenge-Response:** Call any `/v1/*` HTTP route directly, inspect the `PAYMENT-REQUIRED` header, and retry with a signed `PAYMENT-SIGNATURE` header (or pass `paymentSignature` directly into any MCP tool call).
