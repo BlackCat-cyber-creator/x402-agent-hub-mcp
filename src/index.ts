@@ -72,7 +72,7 @@ async function callHub(path: string, init?: RequestInit): Promise<string> {
 
 const server = new McpServer({
   name: "x402-agent-hub",
-  version: "1.2.0",
+  version: "1.3.0",
 });
 
 server.tool(
@@ -254,7 +254,7 @@ server.tool(
 
 server.tool(
   "audit_crypto_token",
-  "Audit any Base, Ethereum, Arbitrum, Optimism, Polygon, BSC, Avalanche, or Solana token contract for honeypots, buy/sell transfer taxes, hidden ownership, whale concentration, LP locks, live DEX liquidity depth, and AMM slippage impact for an intended USD trade size. On Base, Ethereum, BSC, Arbitrum, Optimism and Polygon it also simulates a real buy -> sell round trip to measure actual taxes and confirm the token can be sold ($0.05 USDC on Base).",
+  "Audit any Base, Ethereum, Arbitrum, Optimism, Polygon, BSC, Avalanche, or Solana token contract for honeypots, buy/sell transfer taxes, hidden ownership, whale concentration, LP locks, live DEX liquidity depth, and AMM slippage impact for an intended USD trade size. On Base, Ethereum, BSC, Arbitrum, Optimism and Polygon it also simulates a real buy -> sell round trip to measure actual taxes and confirm the token can be sold ($0.01 USDC on Base).",
   {
     tokenAddress: z
       .string()
@@ -304,6 +304,84 @@ server.tool(
     ],
   }),
 );
+
+// Onchain Read API: cheap single reads across 7 EVM chains. Failed reads (bad input,
+// not found, RPC outage) return an error status and are never charged.
+const CHAIN = z
+  .string()
+  .optional()
+  .describe("base (default), ethereum, arbitrum, optimism, polygon, bsc or avalanche");
+const ADDRESS = z.string().describe("0x-prefixed wallet or contract address");
+const TOKEN = z.string().describe("0x-prefixed ERC-20 token contract address");
+
+const CHAIN_READ_TOOLS: Array<{
+  name: string;
+  path: string;
+  description: string;
+  shape: Record<string, z.ZodTypeAny>;
+}> = [
+  {
+    name: "chain_native_balance",
+    path: "/v1/chain/balance",
+    description: "Native coin balance (ETH, BNB, POL, AVAX) of any address on 7 EVM chains, raw and formatted ($0.002 USDC on Base).",
+    shape: { chain: CHAIN, address: ADDRESS },
+  },
+  {
+    name: "chain_token_balance",
+    path: "/v1/chain/token-balance",
+    description: "ERC-20 balance of an address, already scaled by the token's decimals, with symbol ($0.002 USDC on Base).",
+    shape: { chain: CHAIN, address: ADDRESS, token: TOKEN },
+  },
+  {
+    name: "chain_token_info",
+    path: "/v1/chain/token-info",
+    description: "ERC-20 name, symbol, decimals and formatted total supply ($0.002 USDC on Base).",
+    shape: { chain: CHAIN, token: TOKEN },
+  },
+  {
+    name: "chain_transaction_status",
+    path: "/v1/chain/tx",
+    description: "Transaction status (pending/success/reverted), confirmations, block time, value and all-in fee incl. L1 data fee ($0.002 USDC on Base).",
+    shape: { chain: CHAIN, hash: z.string().describe("0x-prefixed 32-byte transaction hash") },
+  },
+  {
+    name: "chain_address_info",
+    path: "/v1/chain/address-info",
+    description: "Classify an address before interacting: EOA, EIP-7702-delegated EOA or contract, nonce, balance, and proxy implementation (EIP-1967, ZeppelinOS, EIP-1167) ($0.003 USDC on Base).",
+    shape: { chain: CHAIN, address: ADDRESS },
+  },
+  {
+    name: "chain_ens_resolve",
+    path: "/v1/chain/ens",
+    description: "Resolve an ENS name to an address, or an address to its primary ENS name. Pass exactly one of name/address ($0.002 USDC on Base).",
+    shape: {
+      name: z.string().optional().describe("ENS name, e.g. vitalik.eth"),
+      address: z.string().optional().describe("Address to reverse-resolve"),
+    },
+  },
+  {
+    name: "chain_portfolio",
+    path: "/v1/chain/portfolio",
+    description: "One-call multichain portfolio: native + USDC/USDT balances on Base, Ethereum, Arbitrum, Optimism, Polygon, BSC and Avalanche, with total stablecoin USD ($0.005 USDC on Base).",
+    shape: {
+      address: ADDRESS,
+      chains: z.string().optional().describe("Optional comma-separated subset, e.g. base,arbitrum"),
+    },
+  },
+];
+
+for (const tool of CHAIN_READ_TOOLS) {
+  server.tool(tool.name, tool.description, tool.shape, async (args) => {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(args)) {
+      if (typeof value === "string" && value.trim()) query.set(key, value.trim());
+    }
+    const qs = query.toString();
+    return {
+      content: [{ type: "text", text: await callHub(qs ? `${tool.path}?${qs}` : tool.path, { method: "GET" }) }],
+    };
+  });
+}
 
 async function main() {
   const transport = new StdioServerTransport();
