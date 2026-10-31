@@ -53,6 +53,8 @@
 
 ## Quick Setup
 
+> **Runnable examples:** [`examples/`](./examples) has three runnable clients on one $0.015 route (plain `@x402/fetch`, AgentCash CLI, remote MCP): all three run with no wallet and stop at the quote or the price; the paid path is documented, not run.
+
 ### Option 1 — Zero-Install Remote Streamable HTTP MCP (Cursor / Claude / Windsurf / VS Code)
 
 Connect directly to the hosted Cloudflare Edge Streamable HTTP endpoint:
