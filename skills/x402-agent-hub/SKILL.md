@@ -1,6 +1,6 @@
 ---
 name: x402-agent-hub
-description: Pay-per-call onchain reads across Base, Ethereum, Arbitrum, Optimism, Polygon, BSC & Avalanche (native/ERC-20 balances, token info, tx status, contract & proxy detection, ENS, one-call multichain portfolio; $0.002-$0.005, failed reads free), US public-company data from SEC EDGAR (ticker search, profiles, latest filings, revenue/earnings/free-cash-flow fundamentals, Form 4 insider trades), worldwide company and notable-person enrichment from Wikidata (by name or domain: HQ, industry, CEO, founders, headcount, listings, LEI, official socials), Base/EVM/Solana token honeypot & DEX liquidity audits with live buy/sell simulation, ECN CFD/Forex microstructure & ICT killzones (XAUUSD, NAS100, BTCUSD, EURUSD), prop-firm position sizing, B2B WhatsApp/SEO outreach dossiers, and deterministic SVG/PNG visual cards via x402 Base Mainnet USDC micropayments. Use whenever you need a wallet or token balance, transaction confirmation, contract/proxy check, ENS resolution or multichain portfolio, when researching a US public company's financials, filings or insider trades, when enriching a company (from a name or domain) or a notable person, when auditing a crypto token contract for rug/tax/slippage risk, checking Forex/CFD spreads or ICT Silver Bullet killzones, sizing prop-firm lots, enriching business leads for sales outreach, auditing technical SEO, or rendering typo-free OpenGraph/KPI cards.
+description: Pay-per-call onchain reads across Base, Ethereum, Arbitrum, Optimism, Polygon, BSC & Avalanche (native/ERC-20 balances, token info, tx status, contract & proxy detection, ENS, one-call multichain portfolio; $0.002-$0.005, failed reads free), US public-company data from SEC EDGAR (ticker search, profiles, latest filings, revenue/earnings/free-cash-flow fundamentals, Form 4 insider trades), worldwide company and notable-person enrichment from Wikidata (by name or domain: HQ, industry, CEO, founders, headcount, listings, LEI, official socials), token verdicts (A-F grade, plain-language take and shareable card) and Base/EVM/Solana token honeypot & DEX liquidity audits with live buy/sell simulation, ECN CFD/Forex microstructure & ICT killzones (XAUUSD, NAS100, BTCUSD, EURUSD), prop-firm position sizing, B2B WhatsApp/SEO outreach dossiers, and deterministic SVG/PNG visual cards via x402 Base Mainnet USDC micropayments. Use whenever you need a wallet or token balance, transaction confirmation, contract/proxy check, ENS resolution or multichain portfolio, when researching a US public company's financials, filings or insider trades, when enriching a company (from a name or domain) or a notable person, when someone asks whether a token is safe or a rug, when auditing a crypto token contract for rug/tax/slippage risk, checking Forex/CFD spreads or ICT Silver Bullet killzones, sizing prop-firm lots, enriching business leads for sales outreach, auditing technical SEO, or rendering typo-free OpenGraph/KPI cards.
 ---
 
 # x402 Agent Hub Skill
@@ -55,6 +55,16 @@ Pay-per-call (`$0.002`–`$0.050` USDC on **Base Mainnet**, `eip155:8453`) intel
 9. **Deterministic SVG / PNG Visual Card Studio (`$0.025` USDC)**
    - **HTTP:** `POST /v1/render/card` (`{ "template": "trading_signal", "title": "XAUUSD NY Open", "sparkline": [40, 44, 51, 63, 68], "format": "json" }`)
    - **MCP Tool:** `render_visual_card`
+
+## Token Verdict API (`$0.015` USDC, failed calls never charged)
+
+"Is this token safe? Is it a rug?" in one call: an A-F grade, a one-line verdict and a short plain-language take, plus a shareable verdict page (`shareUrl`) and card image (`cardUrl`). Grounded in the full token audit, which is included in the response (live simulated buy then sell, buy/sell tax, honeypot and owner-power checks, DEX liquidity, holder concentration). The grade comes from the audit's score, never from the AI, and the AI text is only used when every number it quotes matches the audit.
+
+| MCP Tool | HTTP | Price | Query |
+| :--- | :--- | :---: | :--- |
+| `token_verdict` | `/v1/crypto/token-verdict` | `$0.015` | `token` (0x address, or Solana mint), optional `chain=base|ethereum|bsc|arbitrum|optimism|polygon|avalanche|solana` |
+
+Example: `npx --yes agentcash fetch "https://x402-agent-hub.x402-agent-hub.workers.dev/v1/crypto/token-verdict?token=0x940181a94A35A4569E4529A3CDfB74e38FD98631&chain=base"`
 
 ## Onchain Read API (`$0.002`–`$0.005` USDC, failed reads never charged)
 

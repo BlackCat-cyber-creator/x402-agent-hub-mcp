@@ -1,6 +1,6 @@
 {
   "name": "x402-agent-hub-mcp",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "type": "module",
   "description": "Model Context Protocol (MCP) server & Agent Skill for x402 Agent Hub: pay-per-call onchain reads across 7 EVM chains (balances, tokens, transactions, contracts/proxies, ENS, multichain portfolio), US public-company data from SEC EDGAR (search, profiles, filings, fundamentals, Form 4 insider trades), worldwide company and notable-person enrichment from Wikidata (by name or domain), token honeypot audits with live buy/sell simulation, CFD/Forex microstructure & ICT killzones, prop-firm risk sizing, B2B lead dossiers, and deterministic SVG/PNG cards via x402 Base USDC micropayments.",
   "keywords": [

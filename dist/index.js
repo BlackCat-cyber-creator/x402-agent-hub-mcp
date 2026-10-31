@@ -64,7 +64,7 @@ async function callHub(path, init) {
 }
 const server = new McpServer({
     name: "x402-agent-hub",
-    version: "1.5.0",
+    version: "1.6.0",
 });
 server.tool("get_hub_catalog", "FREE ($0.00): Inspect the live x402 Agent Hub service catalog, supported CFD/Forex tickers, per-call USDC pricing, and wallet payment readiness.", {}, async () => {
     const res = await fetch(`${HUB_URL}/`, {
@@ -367,6 +367,15 @@ const DATA_TOOLS = [
         shape: {
             name: z.string().optional().describe("Person's name, e.g. Jensen Huang"),
             id: z.string().optional().describe("Wikidata item ID, e.g. Q305177"),
+        },
+    },
+    {
+        name: "token_verdict",
+        path: "/v1/crypto/token-verdict",
+        description: "Token verdict / rug check: an A-F safety grade, a one-line verdict and a short plain-language take on any token on Base, Ethereum, BSC, Arbitrum, Optimism, Polygon, Avalanche or Solana, plus a shareable verdict page and card image. Grounded in the full token audit (live simulated buy then sell, taxes, honeypot and owner-power checks, DEX liquidity, holder concentration), which is included. The grade comes from the audit, never the AI ($0.015 USDC on Base).",
+        shape: {
+            token: z.string().describe("Token contract address: 0x-prefixed on EVM chains, base58 mint on Solana"),
+            chain: z.string().optional().describe("base (default), ethereum, bsc, arbitrum, optimism, polygon, avalanche or solana"),
         },
     },
 ];
