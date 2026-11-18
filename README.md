@@ -18,7 +18,7 @@
 
 ---
 
-## 25 MCP Tools Included
+## 26 MCP Tools Included (25 Paid + 1 Free)
 
 | Tool | HTTP Route | Price (USDC) | Deterministic Output Summary |
 | :--- | :--- | :---: | :--- |
@@ -48,6 +48,17 @@
 | `entity_search` | `GET /v1/entity/search` | `$0.002` | Find companies or notable people by name, with Wikidata IDs to disambiguate. |
 | `entity_company` | `GET /v1/entity/company` | `$0.003` | **Worldwide company enrichment** by name or **domain** (private and non-US too): HQ, industry, CEO, founders, headcount, revenue, listings, LEI, official socials, logo. |
 | `entity_person` | `GET /v1/entity/person` | `$0.003` | Notable-person profile: occupations, current employer and roles, education, public X/LinkedIn/GitHub (no family or residence data). |
+
+### Tool safety annotations
+
+The local stdio server (Option 2) sets a `title` and all four MCP annotation hints on every tool, so hosts can decide when to ask before a call. The hosted `/mcp` endpoint (Option 1) does not carry annotations yet.
+
+| Tools | `readOnlyHint` | `destructiveHint` | `idempotentHint` | `openWorldHint` |
+| :--- | :---: | :---: | :---: | :---: |
+| `get_hub_catalog` (free) | `true` | `false` | `true` | `true` |
+| Every paid tool | `false` | `false` | `false` | `true` |
+
+Each paid call is an irreversible USDC payment from your wallet, fixed at the price listed in its description, so paid tools are not read-only, and they are not idempotent: calling again with the same arguments pays again. They delete or overwrite none of your data, so they are not marked destructive. Every tool reads the live hub over the network, so all are open-world.
 
 ---
 

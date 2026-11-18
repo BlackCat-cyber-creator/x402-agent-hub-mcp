@@ -1,0 +1,406 @@
+{
+  "get_hub_catalog": {
+    "required": [],
+    "properties": {}
+  },
+  "get_ict_sessions": {
+    "required": [],
+    "properties": {
+      "at": {
+        "type": "string"
+      }
+    }
+  },
+  "get_cfd_microstructure": {
+    "required": [],
+    "properties": {
+      "symbol": {
+        "type": "string"
+      }
+    }
+  },
+  "calculate_prop_firm_risk": {
+    "required": [
+      "accountBalanceUsd",
+      "riskPercent",
+      "stopLossPriceDistance",
+      "symbol"
+    ],
+    "properties": {
+      "symbol": {
+        "type": "string"
+      },
+      "accountBalanceUsd": {
+        "type": "number"
+      },
+      "currentEquityUsd": {
+        "type": "number"
+      },
+      "riskPercent": {
+        "type": "number"
+      },
+      "stopLossPriceDistance": {
+        "type": "number"
+      },
+      "dailyDrawdownLimitPercent": {
+        "type": "number"
+      },
+      "maxTotalDrawdownLimitPercent": {
+        "type": "number"
+      }
+    }
+  },
+  "extract_clean_markdown": {
+    "required": [
+      "url"
+    ],
+    "properties": {
+      "url": {
+        "type": "string",
+        "format": "uri"
+      },
+      "maxChars": {
+        "type": "number"
+      }
+    }
+  },
+  "enrich_business_lead": {
+    "required": [
+      "url"
+    ],
+    "properties": {
+      "url": {
+        "type": "string"
+      },
+      "businessName": {
+        "type": "string"
+      }
+    }
+  },
+  "audit_technical_seo": {
+    "required": [
+      "url"
+    ],
+    "properties": {
+      "url": {
+        "type": "string"
+      }
+    }
+  },
+  "render_visual_card": {
+    "required": [
+      "title"
+    ],
+    "properties": {
+      "template": {
+        "type": "string",
+        "enum": [
+          "og_banner",
+          "social_kpi",
+          "trading_signal"
+        ]
+      },
+      "title": {
+        "type": "string"
+      },
+      "subtitle": {
+        "type": "string"
+      },
+      "badge": {
+        "type": "string"
+      },
+      "metricLabel": {
+        "type": "string"
+      },
+      "metricValue": {
+        "type": "string"
+      },
+      "metricDelta": {
+        "type": "string"
+      },
+      "sparkline": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      },
+      "brandName": {
+        "type": "string"
+      },
+      "accentColor": {
+        "type": "string"
+      },
+      "theme": {
+        "type": "string",
+        "enum": [
+          "dark",
+          "light"
+        ]
+      }
+    }
+  },
+  "audit_crypto_token": {
+    "required": [
+      "tokenAddress"
+    ],
+    "properties": {
+      "tokenAddress": {
+        "type": "string"
+      },
+      "chain": {
+        "type": "string",
+        "enum": [
+          "base",
+          "ethereum",
+          "arbitrum",
+          "optimism",
+          "polygon",
+          "bsc",
+          "avalanche",
+          "solana"
+        ]
+      },
+      "intendedOrderUsd": {
+        "type": "number"
+      }
+    }
+  },
+  "generate_outreach_dossier": {
+    "required": [
+      "url"
+    ],
+    "properties": {
+      "url": {
+        "type": "string"
+      },
+      "businessName": {
+        "type": "string"
+      },
+      "agencyOffer": {
+        "type": "string"
+      }
+    }
+  },
+  "chain_native_balance": {
+    "required": [
+      "address"
+    ],
+    "properties": {
+      "chain": {
+        "type": "string"
+      },
+      "address": {
+        "type": "string"
+      }
+    }
+  },
+  "chain_token_balance": {
+    "required": [
+      "address",
+      "token"
+    ],
+    "properties": {
+      "chain": {
+        "type": "string"
+      },
+      "address": {
+        "type": "string"
+      },
+      "token": {
+        "type": "string"
+      }
+    }
+  },
+  "chain_token_info": {
+    "required": [
+      "token"
+    ],
+    "properties": {
+      "chain": {
+        "type": "string"
+      },
+      "token": {
+        "type": "string"
+      }
+    }
+  },
+  "chain_transaction_status": {
+    "required": [
+      "hash"
+    ],
+    "properties": {
+      "chain": {
+        "type": "string"
+      },
+      "hash": {
+        "type": "string"
+      }
+    }
+  },
+  "chain_address_info": {
+    "required": [
+      "address"
+    ],
+    "properties": {
+      "chain": {
+        "type": "string"
+      },
+      "address": {
+        "type": "string"
+      }
+    }
+  },
+  "chain_ens_resolve": {
+    "required": [],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "address": {
+        "type": "string"
+      }
+    }
+  },
+  "chain_portfolio": {
+    "required": [
+      "address"
+    ],
+    "properties": {
+      "address": {
+        "type": "string"
+      },
+      "chains": {
+        "type": "string"
+      }
+    }
+  },
+  "company_search": {
+    "required": [
+      "q"
+    ],
+    "properties": {
+      "q": {
+        "type": "string"
+      },
+      "limit": {
+        "type": "string"
+      }
+    }
+  },
+  "company_profile": {
+    "required": [],
+    "properties": {
+      "ticker": {
+        "type": "string"
+      },
+      "cik": {
+        "type": "string"
+      }
+    }
+  },
+  "company_financials": {
+    "required": [],
+    "properties": {
+      "ticker": {
+        "type": "string"
+      },
+      "cik": {
+        "type": "string"
+      },
+      "period": {
+        "type": "string"
+      },
+      "limit": {
+        "type": "string"
+      }
+    }
+  },
+  "company_filings": {
+    "required": [],
+    "properties": {
+      "ticker": {
+        "type": "string"
+      },
+      "cik": {
+        "type": "string"
+      },
+      "form": {
+        "type": "string"
+      },
+      "since": {
+        "type": "string"
+      },
+      "limit": {
+        "type": "string"
+      }
+    }
+  },
+  "company_insider_trades": {
+    "required": [],
+    "properties": {
+      "ticker": {
+        "type": "string"
+      },
+      "cik": {
+        "type": "string"
+      },
+      "limit": {
+        "type": "string"
+      }
+    }
+  },
+  "entity_search": {
+    "required": [
+      "q"
+    ],
+    "properties": {
+      "q": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string"
+      },
+      "limit": {
+        "type": "string"
+      }
+    }
+  },
+  "entity_company": {
+    "required": [],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "domain": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      }
+    }
+  },
+  "entity_person": {
+    "required": [],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      }
+    }
+  },
+  "token_verdict": {
+    "required": [
+      "token"
+    ],
+    "properties": {
+      "token": {
+        "type": "string"
+      },
+      "chain": {
+        "type": "string"
+      }
+    }
+  }
+}

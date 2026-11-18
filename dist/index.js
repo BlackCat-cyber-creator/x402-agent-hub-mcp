@@ -66,7 +66,23 @@ const server = new McpServer({
     name: "x402-agent-hub",
     version: "1.6.0",
 });
-server.tool("get_hub_catalog", "FREE ($0.00): Inspect the live x402 Agent Hub service catalog, supported CFD/Forex tickers, per-call USDC pricing, and wallet payment readiness.", {}, async () => {
+// MCP tool annotations (hints for hosts and agent directories). get_hub_catalog is the
+// only free tool. Every other tool makes an irreversible USDC payment from the buyer's
+// wallet on each call, fixed at the price in its description, so it is not read-only and
+// not idempotent (a repeat call pays again). No tool deletes or overwrites any of the
+// buyer's data, so none is marked destructive. Every tool reads the live hub over the
+// network, so all are open-world.
+const FREE_READ = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true };
+const PAID_CALL = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true };
+// The title goes both top-level (current spec) and in annotations (2025-03-26 spec hosts).
+function toolInfo(title, hints) {
+    return { title, annotations: { title, ...hints } };
+}
+server.registerTool("get_hub_catalog", {
+    ...toolInfo("x402 Agent Hub catalog", FREE_READ),
+    description: "FREE ($0.00): Inspect the live x402 Agent Hub service catalog, supported CFD/Forex tickers, per-call USDC pricing, and wallet payment readiness.",
+    inputSchema: {},
+}, async () => {
     const res = await fetch(`${HUB_URL}/`, {
         headers: { Accept: "application/json" },
     });
@@ -84,38 +100,50 @@ server.tool("get_hub_catalog", "FREE ($0.00): Inspect the live x402 Agent Hub se
         ],
     };
 });
-server.tool("get_ict_sessions", "Get live ICT Killzones (Asian, London Open, NY Open, London Close), 60m Silver Bullet FVG windows, CFD rollover spread-danger alerts, and Wednesday/Friday triple-swap flags ($0.005 USDC on Base).", {
-    at: z
-        .string()
-        .optional()
-        .describe("Optional ISO-8601 UTC timestamp to evaluate (defaults to live current UTC time)"),
+server.registerTool("get_ict_sessions", {
+    ...toolInfo("ICT killzone sessions", PAID_CALL),
+    description: "Get live ICT Killzones (Asian, London Open, NY Open, London Close), 60m Silver Bullet FVG windows, CFD rollover spread-danger alerts, and Wednesday/Friday triple-swap flags ($0.005 USDC on Base).",
+    inputSchema: {
+        at: z
+            .string()
+            .optional()
+            .describe("Optional ISO-8601 UTC timestamp to evaluate (defaults to live current UTC time)"),
+    },
 }, async ({ at }) => {
     const qs = at ? `?at=${encodeURIComponent(at)}` : "";
     return {
         content: [{ type: "text", text: await callHub(`/v1/trading/sessions${qs}`) }],
     };
 });
-server.tool("get_cfd_microstructure", "Get institutional ECN calibrated spreads, round-turn commissions, M1 ATR, spread-to-ATR execution cost ratios across M1-H1, scalping suitability, and live MT5 FVGs for XAUUSD, BTCUSD, NAS100, US30, US500, GER40, JPN225, USOUSD, EURUSD, GBPUSD, USDJPY ($0.01 USDC on Base).", {
-    symbol: z
-        .string()
-        .optional()
-        .describe("Optional ticker like XAUUSD, NAS100, BTCUSD, US30, GER40, USOUSD, EURUSD. Omit for all 14 symbols."),
+server.registerTool("get_cfd_microstructure", {
+    ...toolInfo("CFD/Forex microstructure", PAID_CALL),
+    description: "Get institutional ECN calibrated spreads, round-turn commissions, M1 ATR, spread-to-ATR execution cost ratios across M1-H1, scalping suitability, and live MT5 FVGs for XAUUSD, BTCUSD, NAS100, US30, US500, GER40, JPN225, USOUSD, EURUSD, GBPUSD, USDJPY ($0.01 USDC on Base).",
+    inputSchema: {
+        symbol: z
+            .string()
+            .optional()
+            .describe("Optional ticker like XAUUSD, NAS100, BTCUSD, US30, GER40, USOUSD, EURUSD. Omit for all 14 symbols."),
+    },
 }, async ({ symbol }) => {
     const qs = symbol ? `?symbol=${encodeURIComponent(symbol)}` : "";
     return {
         content: [{ type: "text", text: await callHub(`/v1/trading/microstructure${qs}`) }],
     };
 });
-server.tool("calculate_prop_firm_risk", "Calculate exact CFD/Forex lot size factoring ECN spread+commission friction and prop-firm daily/max drawdown auto-lock status ($0.01 USDC on Base).", {
-    symbol: z.string().describe("Instrument symbol, e.g. XAUUSD, NAS100, BTCUSD, EURUSD"),
-    accountBalanceUsd: z.number().describe("Starting/reference prop-firm account balance in USD (e.g. 100000)"),
-    currentEquityUsd: z.number().optional().describe("Current live account equity in USD"),
-    riskPercent: z.number().describe("Risk percentage per trade (e.g. 0.5 for 0.5%)"),
-    stopLossPriceDistance: z
-        .number()
-        .describe("Stop-loss distance in raw price units (e.g. 4.5 on XAUUSD, 25 on NAS100)"),
-    dailyDrawdownLimitPercent: z.number().optional().describe("Daily drawdown breach % (default 5)"),
-    maxTotalDrawdownLimitPercent: z.number().optional().describe("Max total drawdown breach % (default 10)"),
+server.registerTool("calculate_prop_firm_risk", {
+    ...toolInfo("Prop-firm risk and lot size", PAID_CALL),
+    description: "Calculate exact CFD/Forex lot size factoring ECN spread+commission friction and prop-firm daily/max drawdown auto-lock status ($0.01 USDC on Base).",
+    inputSchema: {
+        symbol: z.string().describe("Instrument symbol, e.g. XAUUSD, NAS100, BTCUSD, EURUSD"),
+        accountBalanceUsd: z.number().describe("Starting/reference prop-firm account balance in USD (e.g. 100000)"),
+        currentEquityUsd: z.number().optional().describe("Current live account equity in USD"),
+        riskPercent: z.number().describe("Risk percentage per trade (e.g. 0.5 for 0.5%)"),
+        stopLossPriceDistance: z
+            .number()
+            .describe("Stop-loss distance in raw price units (e.g. 4.5 on XAUUSD, 25 on NAS100)"),
+        dailyDrawdownLimitPercent: z.number().optional().describe("Daily drawdown breach % (default 5)"),
+        maxTotalDrawdownLimitPercent: z.number().optional().describe("Max total drawdown breach % (default 10)"),
+    },
 }, async (input) => ({
     content: [
         {
@@ -127,9 +155,13 @@ server.tool("calculate_prop_firm_risk", "Calculate exact CFD/Forex lot size fact
         },
     ],
 }));
-server.tool("extract_clean_markdown", "Fetch any public webpage and convert it into clean, token-efficient LLM Markdown with metadata and token count ($0.005 USDC on Base).", {
-    url: z.string().url().describe("Public http/https URL to convert to Markdown"),
-    maxChars: z.number().optional().describe("Maximum Markdown characters (500-50000, default 15000)"),
+server.registerTool("extract_clean_markdown", {
+    ...toolInfo("Webpage to clean Markdown", PAID_CALL),
+    description: "Fetch any public webpage and convert it into clean, token-efficient LLM Markdown with metadata and token count ($0.005 USDC on Base).",
+    inputSchema: {
+        url: z.string().url().describe("Public http/https URL to convert to Markdown"),
+        maxChars: z.number().optional().describe("Maximum Markdown characters (500-50000, default 15000)"),
+    },
 }, async (input) => ({
     content: [
         {
@@ -141,9 +173,13 @@ server.tool("extract_clean_markdown", "Fetch any public webpage and convert it i
         },
     ],
 }));
-server.tool("enrich_business_lead", "Enrich a business URL for SDR/sales outreach: sanitize noisy brand names, detect phantom wa.me/linktr.ee/marketplace links, extract normalized E.164 WhatsApp/mobile phones (rejecting office PSTN landlines), find emails/socials, and detect CMS/analytics pixels ($0.015 USDC on Base).", {
-    url: z.string().describe("Business website, social bio, or marketplace URL"),
-    businessName: z.string().optional().describe("Optional raw business title to sanitize"),
+server.registerTool("enrich_business_lead", {
+    ...toolInfo("Business lead enrichment", PAID_CALL),
+    description: "Enrich a business URL for SDR/sales outreach: sanitize noisy brand names, detect phantom wa.me/linktr.ee/marketplace links, extract normalized E.164 WhatsApp/mobile phones (rejecting office PSTN landlines), find emails/socials, and detect CMS/analytics pixels ($0.015 USDC on Base).",
+    inputSchema: {
+        url: z.string().describe("Business website, social bio, or marketplace URL"),
+        businessName: z.string().optional().describe("Optional raw business title to sanitize"),
+    },
 }, async (input) => ({
     content: [
         {
@@ -155,8 +191,12 @@ server.tool("enrich_business_lead", "Enrich a business URL for SDR/sales outreac
         },
     ],
 }));
-server.tool("audit_technical_seo", "Run an instant 0-100 Technical SEO & Website Modernization Audit scorecard with prioritized fixes ($0.02 USDC on Base).", {
-    url: z.string().describe("Target website URL to audit"),
+server.registerTool("audit_technical_seo", {
+    ...toolInfo("Technical SEO audit", PAID_CALL),
+    description: "Run an instant 0-100 Technical SEO & Website Modernization Audit scorecard with prioritized fixes ($0.02 USDC on Base).",
+    inputSchema: {
+        url: z.string().describe("Target website URL to audit"),
+    },
 }, async (input) => ({
     content: [
         {
@@ -168,18 +208,25 @@ server.tool("audit_technical_seo", "Run an instant 0-100 Technical SEO & Website
         },
     ],
 }));
-server.tool("render_visual_card", "Render a deterministic, typo-free 1200x630 OpenGraph banner, 1080x1350 social KPI slide, or trading signal sparkline card as SVG + data URI ($0.025 USDC on Base).", {
-    template: z.enum(["og_banner", "social_kpi", "trading_signal"]).optional(),
-    title: z.string().describe("Primary card headline"),
-    subtitle: z.string().optional(),
-    badge: z.string().optional(),
-    metricLabel: z.string().optional(),
-    metricValue: z.string().optional(),
-    metricDelta: z.string().optional(),
-    sparkline: z.array(z.number()).optional().describe("Numeric values for area sparkline chart"),
-    brandName: z.string().optional(),
-    accentColor: z.string().optional().describe("6-digit hex accent color, e.g. #10B981"),
-    theme: z.enum(["dark", "light"]).optional(),
+server.registerTool("render_visual_card", {
+    ...toolInfo("Render visual card", PAID_CALL),
+    description: "Render a deterministic, typo-free 1200x630 OpenGraph banner, 1080x1350 social KPI slide, or trading signal sparkline card as SVG + data URI ($0.025 USDC on Base).",
+    inputSchema: {
+        template: z
+            .enum(["og_banner", "social_kpi", "trading_signal"])
+            .optional()
+            .describe("Layout preset: og_banner 1200x630 (default), social_kpi 1080x1350 or trading_signal 1200x630"),
+        title: z.string().describe("Primary card headline"),
+        subtitle: z.string().optional().describe("Optional supporting subtitle text"),
+        badge: z.string().optional().describe("Optional top pill badge text"),
+        metricLabel: z.string().optional().describe("Optional KPI label"),
+        metricValue: z.string().optional().describe("Optional primary KPI value"),
+        metricDelta: z.string().optional().describe("Optional KPI delta or change text"),
+        sparkline: z.array(z.number()).optional().describe("Numeric values for area sparkline chart"),
+        brandName: z.string().optional().describe("Optional footer brand attribution"),
+        accentColor: z.string().optional().describe("6-digit hex accent color, e.g. #10B981"),
+        theme: z.enum(["dark", "light"]).optional().describe("Color theme: dark (default) or light"),
+    },
 }, async (input) => ({
     content: [
         {
@@ -191,18 +238,22 @@ server.tool("render_visual_card", "Render a deterministic, typo-free 1200x630 Op
         },
     ],
 }));
-server.tool("audit_crypto_token", "Audit any Base, Ethereum, Arbitrum, Optimism, Polygon, BSC, Avalanche, or Solana token contract for honeypots, buy/sell transfer taxes, hidden ownership, whale concentration, LP locks, live DEX liquidity depth, and AMM slippage impact for an intended USD trade size. On Base, Ethereum, BSC, Arbitrum, Optimism and Polygon it also simulates a real buy -> sell round trip to measure actual taxes and confirm the token can be sold ($0.01 USDC on Base).", {
-    tokenAddress: z
-        .string()
-        .describe("0x-prefixed EVM token contract address or Base58 Solana mint address"),
-    chain: z
-        .enum(["base", "ethereum", "arbitrum", "optimism", "polygon", "bsc", "avalanche", "solana"])
-        .optional()
-        .describe("Target chain (defaults to 'base' for 0x addresses or 'solana' for Base58)"),
-    intendedOrderUsd: z
-        .number()
-        .optional()
-        .describe("Intended swap size in USD to estimate AMM pool price impact (default 1000)"),
+server.registerTool("audit_crypto_token", {
+    ...toolInfo("Crypto token audit", PAID_CALL),
+    description: "Audit any Base, Ethereum, Arbitrum, Optimism, Polygon, BSC, Avalanche, or Solana token contract for honeypots, buy/sell transfer taxes, hidden ownership, whale concentration, LP locks, live DEX liquidity depth, and AMM slippage impact for an intended USD trade size. On Base, Ethereum, BSC, Arbitrum, Optimism and Polygon it also simulates a real buy -> sell round trip to measure actual taxes and confirm the token can be sold ($0.01 USDC on Base).",
+    inputSchema: {
+        tokenAddress: z
+            .string()
+            .describe("0x-prefixed EVM token contract address or Base58 Solana mint address"),
+        chain: z
+            .enum(["base", "ethereum", "arbitrum", "optimism", "polygon", "bsc", "avalanche", "solana"])
+            .optional()
+            .describe("Target chain (defaults to 'base' for 0x addresses or 'solana' for Base58)"),
+        intendedOrderUsd: z
+            .number()
+            .optional()
+            .describe("Intended swap size in USD to estimate AMM pool price impact (default 1000)"),
+    },
 }, async (input) => ({
     content: [
         {
@@ -214,13 +265,17 @@ server.tool("audit_crypto_token", "Audit any Base, Ethereum, Arbitrum, Optimism,
         },
     ],
 }));
-server.tool("generate_outreach_dossier", "Generate a complete B2B SDR Outreach Dossier in 1 call: Brand Sanitizer, Phantom Lead Shield, E.164 WhatsApp/email contacts, CMS/pixel stack, 0-100 Technical SEO revenue-leak audit, and ready-to-send personalized WhatsApp & Cold Email scripts ($0.05 USDC on Base).", {
-    url: z.string().describe("Target business website, social bio, or marketplace URL"),
-    businessName: z.string().optional().describe("Optional raw business title to sanitize"),
-    agencyOffer: z
-        .string()
-        .optional()
-        .describe("Optional description of your product/agency offer to weave into the scripts"),
+server.registerTool("generate_outreach_dossier", {
+    ...toolInfo("B2B outreach dossier", PAID_CALL),
+    description: "Generate a complete B2B SDR Outreach Dossier in 1 call: Brand Sanitizer, Phantom Lead Shield, E.164 WhatsApp/email contacts, CMS/pixel stack, 0-100 Technical SEO revenue-leak audit, and ready-to-send personalized WhatsApp & Cold Email scripts ($0.05 USDC on Base).",
+    inputSchema: {
+        url: z.string().describe("Target business website, social bio, or marketplace URL"),
+        businessName: z.string().optional().describe("Optional raw business title to sanitize"),
+        agencyOffer: z
+            .string()
+            .optional()
+            .describe("Optional description of your product/agency offer to weave into the scripts"),
+    },
 }, async (input) => ({
     content: [
         {
@@ -246,36 +301,42 @@ const CIK = z.string().optional().describe("SEC Central Index Key, e.g. 320193 (
 const DATA_TOOLS = [
     {
         name: "chain_native_balance",
+        title: "Native coin balance",
         path: "/v1/chain/balance",
         description: "Native coin balance (ETH, BNB, POL, AVAX) of any address on 7 EVM chains, raw and formatted ($0.002 USDC on Base).",
         shape: { chain: CHAIN, address: ADDRESS },
     },
     {
         name: "chain_token_balance",
+        title: "ERC-20 token balance",
         path: "/v1/chain/token-balance",
         description: "ERC-20 balance of an address, already scaled by the token's decimals, with symbol ($0.002 USDC on Base).",
         shape: { chain: CHAIN, address: ADDRESS, token: TOKEN },
     },
     {
         name: "chain_token_info",
+        title: "ERC-20 token info",
         path: "/v1/chain/token-info",
         description: "ERC-20 name, symbol, decimals and formatted total supply ($0.002 USDC on Base).",
         shape: { chain: CHAIN, token: TOKEN },
     },
     {
         name: "chain_transaction_status",
+        title: "Transaction status",
         path: "/v1/chain/tx",
         description: "Transaction status (pending/success/reverted), confirmations, block time, value and all-in fee incl. L1 data fee ($0.002 USDC on Base).",
         shape: { chain: CHAIN, hash: z.string().describe("0x-prefixed 32-byte transaction hash") },
     },
     {
         name: "chain_address_info",
+        title: "Address classification",
         path: "/v1/chain/address-info",
         description: "Classify an address before interacting: EOA, EIP-7702-delegated EOA or contract, nonce, balance, and proxy implementation (EIP-1967, ZeppelinOS, EIP-1167) ($0.003 USDC on Base).",
         shape: { chain: CHAIN, address: ADDRESS },
     },
     {
         name: "chain_ens_resolve",
+        title: "ENS resolve",
         path: "/v1/chain/ens",
         description: "Resolve an ENS name to an address, or an address to its primary ENS name. Pass exactly one of name/address ($0.002 USDC on Base).",
         shape: {
@@ -285,6 +346,7 @@ const DATA_TOOLS = [
     },
     {
         name: "chain_portfolio",
+        title: "Multichain portfolio",
         path: "/v1/chain/portfolio",
         description: "One-call multichain portfolio: native + USDC/USDT balances on Base, Ethereum, Arbitrum, Optimism, Polygon, BSC and Avalanche, with total stablecoin USD ($0.005 USDC on Base).",
         shape: {
@@ -294,6 +356,7 @@ const DATA_TOOLS = [
     },
     {
         name: "company_search",
+        title: "US public company search",
         path: "/v1/company/search",
         description: "Find a US public company's ticker, legal name, exchange and SEC CIK by name or ticker ($0.002 USDC on Base).",
         shape: {
@@ -303,12 +366,14 @@ const DATA_TOOLS = [
     },
     {
         name: "company_profile",
+        title: "SEC company profile",
         path: "/v1/company/profile",
         description: "SEC company profile: industry, exchanges, fiscal year end, address, former names and links to the latest 10-K/10-Q/8-K ($0.002 USDC on Base).",
         shape: { ticker: TICKER, cik: CIK },
     },
     {
         name: "company_financials",
+        title: "SEC company financials",
         path: "/v1/company/financials",
         description: "Annual or quarterly fundamentals from SEC XBRL (US-GAAP filers): revenue, operating/net income, diluted EPS, operating cash flow, capex, free cash flow, assets, liabilities, equity, cash, margins and YoY growth ($0.005 USDC on Base).",
         shape: {
@@ -320,6 +385,7 @@ const DATA_TOOLS = [
     },
     {
         name: "company_filings",
+        title: "SEC filings",
         path: "/v1/company/filings",
         description: "Latest SEC filings (10-K, 10-Q, 8-K, S-1...) with 8-K item numbers and direct document links, filterable by form and date ($0.002 USDC on Base).",
         shape: {
@@ -332,6 +398,7 @@ const DATA_TOOLS = [
     },
     {
         name: "company_insider_trades",
+        title: "SEC Form 4 insider trades",
         path: "/v1/company/insider-trades",
         description: "Parsed SEC Form 4 insider trades: insider name and role, buy/sell/award code, shares, price, USD value, holdings after, 10b5-1 flag, plus a buy/sell summary ($0.005 USDC on Base).",
         shape: {
@@ -342,6 +409,7 @@ const DATA_TOOLS = [
     },
     {
         name: "entity_search",
+        title: "Company and person search",
         path: "/v1/entity/search",
         description: "Find companies or notable people by name with Wikidata IDs, descriptions and Wikipedia links, to pick the right entity before enriching ($0.002 USDC on Base).",
         shape: {
@@ -352,6 +420,7 @@ const DATA_TOOLS = [
     },
     {
         name: "entity_company",
+        title: "Company enrichment",
         path: "/v1/entity/company",
         description: "Enrich any company worldwide (private, startup or listed) by name, website domain or Wikidata ID: website, founded, HQ, industries, CEO, founders, employees, revenue, stock listings, LEI/ISIN, parent/subsidiaries, official X/LinkedIn/GitHub/Instagram, logo and Wikipedia summary ($0.003 USDC on Base).",
         shape: {
@@ -362,6 +431,7 @@ const DATA_TOOLS = [
     },
     {
         name: "entity_person",
+        title: "Notable person profile",
         path: "/v1/entity/person",
         description: "Professional profile of a notable person (founder, executive, public figure): occupations, current employers and positions, education, birth year and public X/LinkedIn/GitHub accounts. No family or residence data ($0.003 USDC on Base).",
         shape: {
@@ -371,6 +441,7 @@ const DATA_TOOLS = [
     },
     {
         name: "token_verdict",
+        title: "Token verdict (A-F grade)",
         path: "/v1/crypto/token-verdict",
         description: "Token verdict / rug check: an A-F safety grade, a one-line verdict and a short plain-language take on any token on Base, Ethereum, BSC, Arbitrum, Optimism, Polygon, Avalanche or Solana, plus a shareable verdict page and card image. Grounded in the full token audit (live simulated buy then sell, taxes, honeypot and owner-power checks, DEX liquidity, holder concentration), which is included. The grade comes from the audit, never the AI ($0.015 USDC on Base).",
         shape: {
@@ -380,7 +451,8 @@ const DATA_TOOLS = [
     },
 ];
 for (const tool of DATA_TOOLS) {
-    server.tool(tool.name, tool.description, tool.shape, async (args) => {
+    const config = { ...toolInfo(tool.title, PAID_CALL), description: tool.description, inputSchema: tool.shape };
+    server.registerTool(tool.name, config, async (args) => {
         const query = new URLSearchParams();
         for (const [key, value] of Object.entries(args)) {
             if (typeof value === "string" && value.trim())
